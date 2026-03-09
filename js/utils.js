@@ -1,5 +1,7 @@
-// Keep the API base in one place so moving environments is painless.
-const API = 'http://localhost:5000/api';
+// In production on Vercel, `/api` is proxied to Render via vercel.json rewrites.
+const API = window.location.hostname === 'localhost'
+  ? 'http://localhost:5000/api'
+  : '/api';
 
 function getToken() { return localStorage.getItem('kgl_token'); }
 function getUser() { return JSON.parse(localStorage.getItem('kgl_user') || 'null'); }

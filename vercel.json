@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/pages/login.html" },
+    { "source": "/api/:path*", "destination": "https://kgl-final-backend.onrender.com/api/:path*" }
+  ]
+}
