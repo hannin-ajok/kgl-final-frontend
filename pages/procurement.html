@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Procurement – KGL Groceries</title>
+    <link rel="stylesheet" href="../css/main.css" />
+    <link rel="stylesheet" href="../css/forms.css" />
+    <link rel="stylesheet" href="../css/dashboard.css" />
+  </head>
+  <body class="dashboard-page">
+    <div class="layout">
+      <div class="sidebar">
+        <div class="sidebar-logo">🌾 <span>KGL</span> Groceries</div>
+        <div class="sidebar-user">
+          <strong id="sidebarName">User</strong><span id="sidebarRole"></span>
+        </div>
+        <nav id="sidebarNav"></nav>
+        <div class="sidebar-footer">
+          <button onclick="logout()">🚪 Logout</button>
+        </div>
+      </div>
+      <div class="main-content">
+        <div class="page-header">
+          <h1>Produce Procurement</h1>
+          <p>Record incoming produce from dealers and farms</p>
+        </div>
+        <div id="alertBox" class="alert hidden"></div>
+        <!-- Left side captures procurement entries; right side shows live stock state. -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px">
+          <div class="card">
+            <div class="form-title">Record New Produce</div>
+            <form id="procurementForm">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Produce Name</label
+                  ><input
+                    type="text"
+                    id="name"
+                    minlength="2"
+                    required
+                    placeholder="e.g. Maize"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Type/Variety</label
+                  ><input
+                    type="text"
+                    id="type"
+                    required
+                    placeholder="e.g. Yellow Maize"
+                  />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Tonnage (tonnes)</label
+                  ><input
+                    type="number"
+                    id="tonnage"
+                    min="0.1"
+                    step="0.1"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Cost Price (UGX)</label
+                  ><input type="number" id="cost" min="0" required />
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Sale Price (UGX per tonne)</label
+                ><input type="number" id="salePrice" min="0" required />
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Dealer Name</label
+                  ><input type="text" id="dealerName" required />
+                </div>
+                <div class="form-group">
+                  <label>Dealer Contact (10 digits)</label
+                  ><input
+                    type="text"
+                    id="dealerContact"
+                    pattern="[0-9]{10}"
+                    required
+                    placeholder="0700000000"
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                id="submitBtn"
+                class="btn btn-primary"
+                style="width: 100%"
+              >
+                Record Produce
+              </button>
+            </form>
+          </div>
+          <div class="card">
+            <div class="section-header"><h2>Stock Inventory</h2></div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Produce</th>
+                  <th>Type</th>
+                  <th>Tonnage</th>
+                  <th>Sale Price</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="stockTable">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: #757575">
+                    Loading...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="../js/utils.js"></script>
+    <!-- Keep helper scripts loaded before feature-specific page logic -->
+    <script src="../js/sidebar.js"></script>
+    <script src="../js/procurement.js"></script>
+  </body>
+</html>
+

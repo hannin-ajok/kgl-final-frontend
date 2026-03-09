@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reports – KGL Groceries</title>
+    <link rel="stylesheet" href="../css/main.css" />
+    <link rel="stylesheet" href="../css/dashboard.css" />
+  </head>
+  <body class="dashboard-page">
+    <div class="layout">
+      <div class="sidebar">
+        <div class="sidebar-logo">🌾 <span>KGL</span> Groceries</div>
+        <div class="sidebar-user">
+          <strong id="sidebarName">User</strong><span id="sidebarRole"></span>
+        </div>
+        <nav id="sidebarNav"></nav>
+        <div class="sidebar-footer">
+          <button onclick="logout()">🚪 Logout</button>
+        </div>
+      </div>
+      <div class="main-content">
+        <div class="page-header">
+          <h1>Branch Report</h1>
+          <p id="branchLabel">Loading...</p>
+        </div>
+        <div id="alertBox" class="alert hidden"></div>
+        <div class="stats-grid" id="statsGrid"></div>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 8px;
+          "
+        >
+          <div class="card">
+            <div class="section-header"><h2>All Sales</h2></div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Produce</th>
+                  <th>Tonnage</th>
+                  <th>Amount</th>
+                  <th>Buyer</th>
+                  <th>Agent</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="salesTable"></tbody>
+            </table>
+          </div>
+          <div class="card">
+            <div class="section-header"><h2>Pending Credit Sales</h2></div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Buyer</th>
+                  <th>Produce</th>
+                  <th>Due</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody id="creditTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="../js/utils.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        const user = requireAuth(["manager"]);
+        if (!user) return;
+        // Turn raw branch text into a cleaner label for display.
+        document.getElementById("branchLabel").textContent =
+          `Branch: ${user.branch.replace('branch ', '').replace(/\b\w/g, l => l.toUpperCase())}`;
+        try {
+          const r = await apiFetch("/reports/branch");
+          // Keep KPI math on the page simple and transparent.
+          const totalSales = r.sales.reduce((s, x) => s + x.amountPaid, 0);
+          const totalCredit = r.credits.reduce((s, x) => s + x.amountDue, 0);
+          document.getElementById("statsGrid").innerHTML = `
+      <div class="stat-card"><div class="stat-label">Total Sales Revenue</div><div class="stat-value">${formatMoney(totalSales)}</div></div>
+      <div class="stat-card"><div class="stat-label">Pending Credit</div><div class="stat-value" style="color:#f57f17">${formatMoney(totalCredit)}</div></div>
+      <div class="stat-card"><div class="stat-label">Stock Items</div><div class="stat-value">${r.stock.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Out of Stock</div><div class="stat-value" style="color:#c62828">${r.outOfStock.length}</div></div>`;
+          document.getElementById("salesTable").innerHTML =
+            r.sales
+              .map(
+                (s) =>
+                  `<tr><td>${s.produceName}</td><td>${s.tonnage}t</td><td>${formatMoney(s.amountPaid)}</td><td>${s.buyerName}</td><td>${s.salesAgent?.name || "–"}</td><td>${formatDate(s.date)}</td></tr>`,
+              )
+              .join("") ||
+            '<tr><td colspan="6" style="text-align:center;color:#757575">No sales yet.</td></tr>';
+          document.getElementById("creditTable").innerHTML =
+            r.credits
+              .map(
+                (c) =>
+                  `<tr><td>${c.buyerName}</td><td>${c.produceName}</td><td>${formatDate(c.dueDate)}</td><td>${formatMoney(c.amountDue)}</td></tr>`,
+              )
+              .join("") ||
+            '<tr><td colspan="4" style="text-align:center;color:#2e7d32">No pending credits.</td></tr>';
+        } catch (err) {
+          showAlert("alertBox", err.message, "error");
+        }
+      });
+    </script>
+  </body>
+</html>
+

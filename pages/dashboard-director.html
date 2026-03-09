@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Director Dashboard – KGL Groceries</title>
+    <link rel="stylesheet" href="../css/main.css" />
+    <link rel="stylesheet" href="../css/dashboard.css" />
+    </head>
+  <body class="dashboard-page">
+    <div class="layout">
+      <div class="sidebar">
+        <div class="sidebar-logo"><img src="/images/grains-spoon.png" alt="KGL Groceries" style="width: 120px; height: 40px;"></div>
+        <div class="sidebar-user">
+          <strong id="sidebarName">User</strong><span id="sidebarRole"></span>
+        </div>
+        <nav id="sidebarNav"></nav>
+        <div class="sidebar-footer">
+          <button onclick="logout()">🚪 Logout</button>
+        </div>
+      </div>
+      <div class="main-content">
+        <div class="page-header">
+          <h1>Sales Summary</h1>
+          <p>Aggregated report across all branches</p>
+        </div>
+        <div id="alertBox" class="alert hidden"></div>
+        <div class="stats-grid" id="statsGrid">
+          <p style="color: #757575">Loading...</p>
+        </div>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 24px;
+          "
+        >
+          <div class="card">
+            <div class="section-header"><h2>Sales by Branch</h2></div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Branch</th>
+                  <th>Total Sales</th>
+                  <th>Tonnage</th>
+                  <th>Transactions</th>
+                </tr>
+              </thead>
+              <tbody id="salesByBranch"></tbody>
+            </table>
+          </div>
+          <div class="card">
+            <div class="section-header"><h2>Credit by Branch</h2></div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Branch</th>
+                  <th>Total Credit</th>
+                  <th>Transactions</th>
+                </tr>
+              </thead>
+              <tbody id="creditByBranch"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card" style="margin-top: 24px">
+          <div class="section-header"><h2>⚠️ Out of Stock Items</h2></div>
+          <div id="outOfStockList"></div>
+        </div>
+      </div>
+    </div>
+    <script src="../js/utils.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        const user = requireAuth(["director"]);
+        if (!user) return;
+        try {
+          const report = await apiFetch("/reports/summary");
+          // Roll branch-level totals into top summary cards.
+          const totalSales = report.salesByBranch.reduce(
+            (s, b) => s + b.totalSales,
+            0,
+          );
+          const totalCredit = report.creditByBranch.reduce(
+            (s, b) => s + b.totalCredit,
+            0,
+          );
+          document.getElementById("statsGrid").innerHTML = `
+      <div class="stat-card"><div class="stat-label">Total Revenue (All Branches)</div><div class="stat-value">${formatMoney(totalSales)}</div></div>
+      <div class="stat-card"><div class="stat-label">Total Credit Outstanding</div><div class="stat-value" style="color:#f57f17">${formatMoney(totalCredit)}</div></div>
+      <div class="stat-card"><div class="stat-label">Out of Stock Items</div><div class="stat-value" style="color:#c62828">${report.outOfStock.length}</div></div>`;
+          document.getElementById("salesByBranch").innerHTML =
+            report.salesByBranch
+              .map(
+                // Normalize legacy branch ids so the table stays consistent.
+                (b) =>
+                  `<tr><td>${b._id === 'branch 1' || b._id === 'branch1' || b._id === 'Branch 1' ? 'branch maganjo' : b._id === 'branch 2' || b._id === 'branch2' || b._id === 'Branch 2' ? 'branch matugga' : b._id}</td><td>${formatMoney(b.totalSales)}</td><td>${b.totalTonnage}t</td><td>${b.count}</td></tr>`,
+              )
+              .join("") ||
+            '<tr><td colspan="4" style="color:#757575;text-align:center">No data</td></tr>';
+          document.getElementById("creditByBranch").innerHTML =
+            report.creditByBranch
+              .map(
+                (b) =>
+                  `<tr><td>${b._id === 'branch 1' || b._id === 'branch1' || b._id === 'Branch 1' ? 'branch maganjo' : b._id === 'branch 2' || b._id === 'branch2' || b._id === 'Branch 2' ? 'branch matugga' : b._id}</td><td>${formatMoney(b.totalCredit)}</td><td>${b.count}</td></tr>`,
+              )
+              .join("") ||
+            '<tr><td colspan="3" style="color:#757575;text-align:center">No data</td></tr>';
+          const oos = document.getElementById("outOfStockList");
+          oos.innerHTML = report.outOfStock.length
+            ? report.outOfStock
+                .map(
+                  (p) =>
+                    `<div class="alert alert-warning">⚠️ <strong>${p.name}</strong> – ${p.branch === 'branch 1' || p.branch === 'branch1' || p.branch === 'Branch 1' ? 'branch maganjo' : p.branch === 'branch 2' || p.branch === 'branch2' || p.branch === 'Branch 2' ? 'branch matugga' : p.branch}</div>`,
+                )
+                .join("")
+            : '<p style="color:#2e7d32">✅ All items are in stock across all branches.</p>';
+        } catch (err) {
+          showAlert("alertBox", err.message, "error");
+        }
+      });
+    </script>
+  </body>
+</html>
+
+

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agent Dashboard – KGL Groceries</title>
+    <link rel="stylesheet" href="../css/main.css" />
+    <link rel="stylesheet" href="../css/dashboard.css" />
+    </head>
+  <body class="dashboard-page">
+    <div class="layout">
+      <div class="sidebar">
+        <div class="sidebar-logo"><img src="/images/grains-spoon.png" alt="KGL Groceries" style="width: 120px; height: 40px;"></div>
+        <div class="sidebar-user">
+          <strong id="sidebarName">User</strong><span id="sidebarRole"></span>
+        </div>
+        <nav id="sidebarNav"></nav>
+        <div class="sidebar-footer">
+          <button onclick="logout()">🚪 Logout</button>
+        </div>
+      </div>
+      <div class="main-content">
+        <div class="page-header">
+          <h1>Welcome</h1>
+          <p id="welcomeMsg">Sales Agent Dashboard</p>
+        </div>
+        <div id="alertBox" class="alert hidden"></div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">My Sales Today</div>
+            <div class="stat-value" id="statToday">–</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">My Total Sales</div>
+            <div class="stat-value" id="statTotal">–</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Pending Credits</div>
+            <div class="stat-value" id="statCredits">–</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-header">
+            <h2>My Recent Sales</h2>
+            <a href="sales.html" class="btn btn-primary btn-sm">+ New Sale</a>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Produce</th>
+                <th>Tonnage</th>
+                <th>Amount</th>
+                <th>Buyer</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="salesTable">
+              <tr>
+                <td colspan="5" style="text-align: center; color: #757575">
+                  Loading...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <script src="../js/utils.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        const user = requireAuth(["agent"]);
+        if (!user) return;
+        document.getElementById("welcomeMsg").textContent =
+          `Welcome back, ${user.name}`;
+        try {
+          // Fetch sales and credits together to keep dashboard load quick.
+          const [sales, credits] = await Promise.all([
+            apiFetch("/sales"),
+            apiFetch("/credit"),
+          ]);
+          // Support both populated object and raw id shape for salesAgent.
+          const mySales = sales.filter(
+            (s) => s.salesAgent?._id === user.id || s.salesAgent === user.id,
+          );
+          const today = new Date().toDateString();
+          const todaySales = mySales.filter(
+            (s) => new Date(s.date).toDateString() === today,
+          );
+          document.getElementById("statToday").textContent = formatMoney(
+            todaySales.reduce((s, x) => s + x.amountPaid, 0),
+          );
+          document.getElementById("statTotal").textContent = formatMoney(
+            mySales.reduce((s, x) => s + x.amountPaid, 0),
+          );
+          document.getElementById("statCredits").textContent = credits.filter(
+            (c) => c.status === "pending",
+          ).length;
+          const tbody = document.getElementById("salesTable");
+          tbody.innerHTML =
+            mySales
+              .slice(0, 10)
+              .map(
+                (s) =>
+                  `<tr><td>${s.produceName}</td><td>${s.tonnage}t</td><td>${formatMoney(s.amountPaid)}</td><td>${s.buyerName}</td><td>${formatDate(s.date)}</td></tr>`,
+              )
+              .join("") ||
+            '<tr><td colspan="5" style="text-align:center;color:#757575">No sales yet.</td></tr>';
+        } catch (err) {
+          showAlert("alertBox", err.message, "error");
+        }
+      });
+    </script>
+  </body>
+</html>
+
+

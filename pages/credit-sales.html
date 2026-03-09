@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Credit Sales – KGL Groceries</title>
+    <link rel="stylesheet" href="../css/main.css" />
+    <link rel="stylesheet" href="../css/forms.css" />
+    <link rel="stylesheet" href="../css/dashboard.css" />
+    </head>
+  <body class="dashboard-page">
+    <div class="layout">
+      <div class="sidebar">
+        <div class="sidebar-logo">🌾 <span>KGL</span> Groceries</div>
+        <div class="sidebar-user">
+          <strong id="sidebarName">User</strong><span id="sidebarRole"></span>
+        </div>
+        <nav id="sidebarNav"></nav>
+        <div class="sidebar-footer">
+          <button onclick="logout()">🚪 Logout</button>
+        </div>
+      </div>
+      <div class="main-content">
+        <div class="page-header">
+          <h1>Credit Sales</h1>
+          <p>Record deferred payment sales</p>
+        </div>
+        <div id="alertBox" class="alert hidden"></div>
+        <!-- Form + pending list side by side so users can record and reconcile quickly. -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px">
+          <div class="card">
+            <div class="form-title">New Credit Sale</div>
+            <form id="creditForm">
+              <div class="form-group">
+                <label>Select Produce</label>
+                <select id="produceSelect" required>
+                  <option value="">-- Select produce --</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Tonnage</label
+                  ><input
+                    type="number"
+                    id="tonnage"
+                    min="0.1"
+                    step="0.1"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Amount Due (UGX)</label
+                  ><input type="number" id="amountDue" min="0" required />
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Buyer Name</label
+                ><input type="text" id="buyerName" required />
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>NIN (14 chars)</label
+                  ><input
+                    type="text"
+                    id="nin"
+                    minlength="14"
+                    maxlength="14"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Buyer Contact</label
+                  ><input
+                    type="text"
+                    id="contact"
+                    pattern="[0-9]{10}"
+                    required
+                    placeholder="0700000000"
+                  />
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Location</label
+                ><input type="text" id="location" required />
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Dispatch Date</label
+                  ><input type="date" id="dispatchDate" required />
+                </div>
+                <div class="form-group">
+                  <label>Due Date</label
+                  ><input type="date" id="dueDate" required />
+                </div>
+              </div>
+              <button
+                type="submit"
+                id="submitBtn"
+                class="btn btn-primary"
+                style="width: 100%"
+              >
+                Record Credit Sale
+              </button>
+            </form>
+          </div>
+          <div class="card">
+            <div class="section-header"><h2>Pending Credit Sales</h2></div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Buyer</th>
+                  <th>Produce</th>
+                  <th>Amount Due</th>
+                  <th>Due Date</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="creditTable">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: #757575">
+                    Loading...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="../js/utils.js"></script>
+    <!-- Utilities first, then shared nav, then page-specific actions -->
+    <script src="../js/sidebar.js"></script>
+    <script src="../js/credit-sales.js"></script>
+  </body>
+</html>
+
+

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manager Dashboard – KGL Groceries</title>
+    <link rel="stylesheet" href="../css/main.css" />
+    <link rel="stylesheet" href="../css/dashboard.css" />
+    </head>
+  <body class="dashboard-page">
+    <div class="layout">
+      <div class="sidebar">
+        <div class="sidebar-logo"><img src="/images/grains-spoon.png" alt="KGL Groceries" style="width: 120px; height: 40px;"></div>
+        <div class="sidebar-user">
+          <strong id="sidebarName">User</strong><span id="sidebarRole"></span>
+        </div>
+        <nav id="sidebarNav"></nav>
+        <div class="sidebar-footer">
+          <button onclick="logout()">🚪 Logout</button>
+        </div>
+      </div>
+      <div class="main-content">
+        <div class="page-header">
+          <h1>Dashboard</h1>
+          <p id="branchLabel">Loading branch info...</p>
+        </div>
+        <div id="alertBox" class="alert hidden"></div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Sales Today</div>
+            <div class="stat-value" id="statSalesToday">–</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Stock Items</div>
+            <div class="stat-value" id="statStock">–</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Pending Credits</div>
+            <div class="stat-value" id="statCredits">–</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Out of Stock</div>
+            <div class="stat-value" id="statOutOfStock" style="color: #c62828">
+              –
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-header"><h2>⚠️ Out of Stock Items</h2></div>
+          <div id="outOfStockList">
+            <p style="color: #757575; font-size: 14px">Loading...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="../js/utils.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        const user = requireAuth(["manager"]);
+        if (!user) return;
+        // Keep branch naming human-readable in the page header.
+        document.getElementById("branchLabel").textContent =
+          `Branch: ${user.branch === "branch maganjo" ? "Maganjo" : "Matugga"}`;
+        try {
+          const report = await apiFetch("/reports/branch");
+          const today = new Date().toDateString();
+          // "Today" stats are calculated client-side from the fetched report rows.
+          const salesToday = report.sales.filter(
+            (s) => new Date(s.date).toDateString() === today,
+          );
+          const totalToday = salesToday.reduce(
+            (sum, s) => sum + s.amountPaid,
+            0,
+          );
+          document.getElementById("statSalesToday").textContent =
+            formatMoney(totalToday);
+          document.getElementById("statStock").textContent =
+            report.stock.length;
+          document.getElementById("statCredits").textContent =
+            report.credits.length;
+          document.getElementById("statOutOfStock").textContent =
+            report.outOfStock.length;
+          const list = document.getElementById("outOfStockList");
+          list.innerHTML =
+            report.outOfStock.length === 0
+              ? '<p style="color:#2e7d32;font-size:14px">✅ All items are in stock.</p>'
+              : report.outOfStock
+                  .map(
+                    (p) =>
+                      `<div class="alert alert-warning">⚠️ <strong>${p.name}</strong> (${p.type}) is out of stock</div>`,
+                  )
+                  .join("");
+        } catch (err) {
+          showAlert("alertBox", err.message, "error");
+        }
+      });
+    </script>
+  </body>
+</html>
+
+
